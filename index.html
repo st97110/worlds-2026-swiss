@@ -25,6 +25,8 @@
   --loss: #ff5c7c;
   --loss-bg: rgba(255, 92, 124, .22);
   --win-bg: rgba(47, 225, 255, .24);
+  --col-min: 158px;
+  --col-gap: clamp(8px, 1.1vw, 18px);
   --font-display: "Anton", "Impact", "Arial Narrow", sans-serif;
   --font-label: "Barlow Condensed", "Arial Narrow", "Noto Sans TC", sans-serif;
   --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
@@ -43,21 +45,21 @@ body {
 .wrap {
   max-width: 1480px;
   margin: 0 auto;
-  padding-block: 28px 48px;
+  padding-block: 20px 48px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 16px;
 }
 
 /* ---------- header ---------- */
-header { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+header { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 h1 {
   margin: 0;
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(44px, 9vw, 104px);
+  font-size: clamp(40px, 5vw, 64px);
   line-height: .95;
   letter-spacing: .02em;
   color: #dfe5f5;
@@ -69,7 +71,7 @@ h1 {
   background: linear-gradient(90deg, transparent, rgba(47,225,255,.12) 18%, var(--cyan));
   font-family: var(--font-label);
   font-weight: 700;
-  font-size: clamp(15px, 2.2vw, 22px);
+  font-size: clamp(14px, 1.8vw, 19px);
   letter-spacing: .06em;
   text-align: center;
   padding: 6px 12px;
@@ -121,15 +123,16 @@ h1 {
 
 /* ---------- bracket ---------- */
 .scroller { overflow-x: auto; padding-bottom: 6px; }
-.bracket {
+/* Columns stretch to the page width; below six --col-min columns the bracket scrolls sideways instead of squashing. */
+.bracket, .bracket-heads {
   display: grid;
-  grid-template-columns: repeat(6, 232px);
-  gap: 22px;
-  min-height: 660px;
-  width: max-content;
-  margin: 0 auto;
+  grid-template-columns: repeat(6, minmax(var(--col-min), 1fr));
+  gap: var(--col-gap);
+  min-width: calc(6 * var(--col-min) + 5 * var(--col-gap));
 }
-.col { display: flex; flex-direction: column; justify-content: space-around; gap: 18px; }
+.bracket { min-height: 460px; }
+.bracket-heads { margin-bottom: 10px; }
+.col { display: flex; flex-direction: column; justify-content: space-around; gap: 14px; min-width: 0; }
 .col-head {
   font-family: var(--font-label);
   font-weight: 700;
@@ -140,10 +143,9 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 34px;
+  min-height: 30px;
   border-bottom: 1px solid var(--line);
 }
-.bracket-heads { display: grid; grid-template-columns: repeat(6, 232px); gap: 22px; width: max-content; margin: 0 auto 12px; }
 .group { display: flex; flex-direction: column; gap: 4px; }
 .group-label {
   display: flex;
@@ -151,10 +153,12 @@ h1 {
   background: #000a2a;
   font-family: var(--font-label);
   font-weight: 600;
-  font-size: 14px;
-  letter-spacing: .04em;
-  padding: 3px 8px;
+  font-size: 13px;
+  letter-spacing: .03em;
+  padding: 2px 7px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  gap: 6px;
 }
 .group-label .rec { color: var(--cyan); }
 
@@ -164,15 +168,16 @@ h1 {
   align-items: stretch;
   background: var(--slot);
   border: 1px solid transparent;
-  min-height: 46px;
+  min-height: 40px;
+  min-width: 0;
 }
 .match.placeholder { opacity: .55; }
 .vs {
   align-self: center;
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 15px;
   color: #cfd7f5;
-  padding: 0 4px;
+  padding: 0 2px;
   letter-spacing: .02em;
 }
 .team {
@@ -182,9 +187,9 @@ h1 {
   color: var(--fg);
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 6px 8px;
-  font: 700 17px/1 var(--font-label);
+  gap: 5px;
+  padding: 5px 6px;
+  font: 700 16px/1 var(--font-label);
   letter-spacing: .03em;
   cursor: pointer;
   min-width: 0;
@@ -199,7 +204,7 @@ h1 {
 .team.lose { opacity: .32; filter: grayscale(1); }
 .team.empty { cursor: default; }
 .logo {
-  width: 28px; height: 28px;
+  width: 24px; height: 24px;
   flex: none;
   object-fit: contain;
   filter: drop-shadow(0 0 1px rgba(255,255,255,.55));
@@ -214,32 +219,41 @@ h1 {
 @keyframes deal { from { opacity: 0; transform: translateX(-14px) scale(.97); } }
 
 .draw-slot { display: flex; justify-content: center; }
-.draw-slot .btn { width: 100%; justify-content: center; padding-block: 12px; font-size: 17px; }
+.draw-slot .btn { width: 100%; justify-content: center; padding-block: 11px; font-size: 16px; }
 
 .result { display: flex; flex-direction: column; gap: 4px; }
 .result-head {
   display: flex; justify-content: space-between;
-  font-family: var(--font-label); font-weight: 700; font-size: 14px; letter-spacing: .05em;
-  padding: 3px 8px;
+  font-family: var(--font-label); font-weight: 700; font-size: 13px; letter-spacing: .04em;
+  padding: 2px 7px;
+  white-space: nowrap;
+  gap: 6px;
 }
 .result.adv .result-head { background: var(--cyan); color: var(--cyan-ink); }
 .result.out .result-head { background: #000a2a; color: var(--muted); }
 .result-body {
-  display: flex; gap: 6px; flex-wrap: wrap;
+  display: flex; gap: 5px; flex-wrap: wrap;
   background: var(--slot);
-  padding: 7px 8px;
-  min-height: 46px;
+  padding: 6px;
+  min-height: 40px;
   align-items: center;
+  container-type: inline-size;
 }
 .chip {
   display: inline-flex; align-items: center; gap: 5px;
-  font: 700 15px/1 var(--font-label);
-  padding: 3px 7px 3px 4px;
+  font: 700 14px/1 var(--font-label);
+  padding: 3px 6px 3px 3px;
   background: rgba(255,255,255,.06);
 }
-.chip .logo { width: 22px; height: 22px; }
-.chip.empty { width: 52px; height: 28px; background: transparent; border: 1px dashed var(--line); }
+.chip .logo { width: 20px; height: 20px; }
+.chip.empty { width: 44px; height: 26px; background: transparent; border: 1px dashed var(--line); }
 .result.out .chip:not(.empty) { opacity: .6; }
+/* narrow result boxes: logos only, full name stays in the tooltip */
+@container (max-width: 205px) {
+  .chip { padding: 3px; }
+  .chip .code { display: none; }
+  .chip.empty { width: 26px; }
+}
 
 /* ---------- progression table ---------- */
 section h2 {
@@ -268,7 +282,7 @@ td.rec.out { color: var(--loss); }
 .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; color: var(--muted); font-size: 13px; }
 .legend i { display: inline-block; width: 12px; height: 12px; margin-right: 5px; vertical-align: -1px; }
 
-.how { color: var(--muted); font-size: 13px; max-width: 70ch; margin: 0; }
+.how { color: var(--muted); font-size: 13px; max-width: 70ch; margin: 12px 0 0; }
 footer { color: var(--muted); font-size: 12px; }
 footer a { color: var(--muted); }
 
@@ -281,6 +295,14 @@ footer a { color: var(--muted); }
   font: 700 15px/1 var(--font-label);
   padding: 10px 16px;
   z-index: 10;
+}
+
+/* small laptops / tablets: tighter cells so all six columns still fit */
+@media (max-width: 1100px) {
+  :root { --col-min: 148px; }
+  .team { font-size: 14px; gap: 4px; padding: 4px 5px; }
+  .team .logo { width: 20px; height: 20px; }
+  .vs { font-size: 13px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -312,13 +334,13 @@ footer a { color: var(--muted); }
     <button class="btn" id="btn-reset" type="button">重置</button>
   </div>
 
-  <p class="how">點隊伍＝選那隊贏，再點一次取消。整輪選完後按「抽籤」產生下一輪：同戰績的隊伍隨機配對，不會遇到已經交手過的對手。「重新抽籤」會重抽最新一輪，「倒退」可以一步步回到之前任何狀態。進度會存在這台瀏覽器。</p>
-
   <section aria-label="瑞士輪對戰表">
     <div class="scroller">
       <div class="bracket-heads" id="heads"></div>
       <div class="bracket" id="bracket"></div>
     </div>
+    <p class="how">點隊伍＝選那隊贏，再點一次取消。整輪選完後按「抽籤」產生下一輪：同戰績的隊伍隨機配對，不會遇到已經交手過的對手。「重新抽籤」會重抽最新一輪，「倒退」可以一步步回到之前任何狀態。進度會存在這台瀏覽器。</p>
+
   </section>
 
   <section>
@@ -609,7 +631,7 @@ footer a { color: var(--muted); }
   function resultBlock(key, rec) {
     const r = RESULTS[key];
     const teams = Object.keys(TEAMS).filter((c) => recStr(rec[c]) === key);
-    let chips = teams.map((c) => `<span class="chip" title="${TEAMS[c].name}">${logo(c)}${label(c)}</span>`).join('');
+    let chips = teams.map((c) => `<span class="chip" title="${TEAMS[c].name}">${logo(c)}<span class="code">${label(c)}</span></span>`).join('');
     for (let k = teams.length; k < r.n; k++) chips += '<span class="chip empty"></span>';
     return `<div class="result ${r.adv ? 'adv' : 'out'}"><div class="result-head"><span>${r.label}</span><span>${r.adv ? r.place : ''}</span></div><div class="result-body">${chips}</div></div>`;
   }

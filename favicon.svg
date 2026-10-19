@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#06104a"/>
+      <stop offset="1" stop-color="#0b2a8f"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- bracket connectors -->
+  <path d="M23 16h3v10h-3M23 38h3v10h-3M39 21h3v22h-3M42 32h2" fill="none" stroke="#8f9cd6" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- round 1: four slots -->
+  <rect x="8" y="13" width="15" height="6" rx="1.5" fill="#dfe5f5"/>
+  <rect x="8" y="23" width="15" height="6" rx="1.5" fill="#dfe5f5" opacity=".45"/>
+  <rect x="8" y="35" width="15" height="6" rx="1.5" fill="#dfe5f5" opacity=".45"/>
+  <rect x="8" y="45" width="15" height="6" rx="1.5" fill="#dfe5f5"/>
+  <!-- round 2: two winners -->
+  <rect x="26" y="18" width="13" height="6" rx="1.5" fill="#dfe5f5"/>
+  <rect x="26" y="40" width="13" height="6" rx="1.5" fill="#dfe5f5" opacity=".45"/>
+  <!-- advances -->
+  <rect x="44" y="27" width="13" height="10" rx="2" fill="#2fe1ff"/>
+</svg>

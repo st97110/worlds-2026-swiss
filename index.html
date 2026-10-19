@@ -274,6 +274,10 @@ th, td { border: 1px solid var(--line); padding: 4px 6px; text-align: center; }
 thead th { background: var(--panel); font-family: var(--font-label); font-size: 15px; letter-spacing: .04em; }
 tbody th { text-align: left; font-family: var(--font-label); font-size: 16px; font-weight: 700; white-space: nowrap; }
 tbody th .inner { display: flex; align-items: center; gap: 8px; }
+td.place { width: 9%; font-family: var(--font-label); font-weight: 700; font-size: 17px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+td.place.adv { color: var(--cyan); }
+td.place.out { color: var(--loss); }
+tr.tier > * { border-top: 2px solid var(--muted); }
 td { height: 40px; width: 15%; }
 td .logo { width: 26px; height: 26px; vertical-align: middle; }
 td.w { background: var(--win-bg); }
@@ -348,7 +352,7 @@ footer a { color: var(--muted); }
   </section>
 
   <section>
-    <h2>Round Progression</h2>
+    <h2>Standings · Round Progression</h2>
     <div class="table-wrap"><table id="prog"></table></div>
     <div class="legend">
       <span><i style="background:var(--win-bg);outline:1px solid var(--cyan)"></i>勝（格內為對手）</span>
@@ -648,9 +652,23 @@ footer a { color: var(--muted); }
   }
   function renderTable() {
     const rec = records();
-    let html = '<thead><tr><th scope="col">Team</th>' + ROUNDS.map((_, i) => `<th scope="col">Round ${i + 1}</th>`).join('') + '<th scope="col">戰績</th></tr></thead><tbody>';
-    for (const c of TABLE_ORDER) {
-      html += `<tr><th scope="row"><span class="inner">${logo(c)}${label(c)}</span></th>`;
+    // Standings: best record first (win diff, then wins); tied records share a placement range like 15–16.
+    const order = TABLE_ORDER.slice().sort((x, y) =>
+      (rec[y].w - rec[y].l) - (rec[x].w - rec[x].l) || rec[y].w - rec[x].w);
+    const place = {};
+    order.forEach((c, i) => {
+      if (i && recStr(rec[c]) === recStr(rec[order[i - 1]])) { place[c] = place[order[i - 1]]; return; }
+      let j = i;
+      while (j + 1 < order.length && recStr(rec[order[j + 1]]) === recStr(rec[c])) j++;
+      place[c] = { from: i + 1, to: j + 1 };
+    });
+    let html = '<thead><tr><th scope="col">排名</th><th scope="col">Team</th>' + ROUNDS.map((_, i) => `<th scope="col">Round ${i + 1}</th>`).join('') + '<th scope="col">戰績</th></tr></thead><tbody>';
+    order.forEach((c, idx) => {
+      const pl = place[c];
+      const st = rec[c].w === 3 ? 'adv' : rec[c].l === 3 ? 'out' : '';
+      const cut = idx && place[order[idx - 1]] !== pl ? ' class="tier"' : '';
+      const span = pl.from === pl.to ? `${pl.from}` : `${pl.from}–${pl.to}`;
+      html += `<tr${cut}>${idx && place[order[idx - 1]] === pl ? '' : `<td class="place ${st}" rowspan="${pl.to - pl.from + 1}">${span}</td>`}<th scope="row"><span class="inner">${logo(c)}${label(c)}</span></th>`;
       for (let i = 0; i < ROUNDS.length; i++) {
         const m = state.rounds[i] && state.rounds[i].matches.find((x) => x.a === c || x.b === c);
         if (!m) { html += '<td></td>'; continue; }
@@ -662,7 +680,7 @@ footer a { color: var(--muted); }
       const r = rec[c];
       const cls = r.w === 3 ? 'adv' : r.l === 3 ? 'out' : '';
       html += `<td class="rec ${cls}">${recStr(r)}${r.w === 3 ? ' 晉級' : r.l === 3 ? ' 淘汰' : ''}</td></tr>`;
-    }
+    });
     document.getElementById('prog').innerHTML = html + '</tbody>';
   }
   function renderStatus() {

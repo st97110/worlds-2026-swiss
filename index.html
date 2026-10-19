@@ -29,6 +29,7 @@
   --loss: #ff5c7c;
   --loss-bg: rgba(255, 92, 124, .22);
   --win-bg: rgba(47, 225, 255, .24);
+  --odds-b: #e8925a;
   --col-min: 158px;
   --col-gap: clamp(8px, 1.1vw, 18px);
   --font-display: "Anton", "Impact", "Arial Narrow", sans-serif;
@@ -111,7 +112,7 @@ h1 {
   color: var(--fg);
   font: 600 15px/1 var(--font-label);
   letter-spacing: .04em;
-  padding: 9px 14px;
+  padding: 8px 11px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -128,6 +129,77 @@ h1 {
 #btn-bias:not(:disabled), #btn-bias-all:not(:disabled) { border-color: color-mix(in srgb, var(--cyan) 45%, var(--line)); }
 .vs { display: flex; flex-direction: column; align-items: center; line-height: 1; }
 .vs .num { font: 600 11px/1 var(--font-label); color: var(--cyan); letter-spacing: .04em; margin-bottom: 2px; }
+.odds { display: flex; justify-content: space-between; width: 100%; gap: 4px; font: 600 11px/1 var(--font-label); color: var(--muted); font-variant-numeric: tabular-nums; }
+.odds .fav { color: var(--fg); }
+.bar { display: block; width: 100%; min-width: 30px; height: 3px; margin-top: 3px; background: var(--odds-b); }
+.bar i { display: block; height: 100%; background: var(--cyan); }
+.bar.big { height: 6px; }
+
+/* ---------- My Rankings modal ---------- */
+body.modal-open { overflow: hidden; }
+.modal {
+  position: fixed; inset: 0; z-index: 20;
+  background: rgba(1, 4, 20, .72);
+  display: flex; align-items: center; justify-content: center;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.modal-panel {
+  width: min(980px, 100%); max-height: 100%;
+  display: flex; flex-direction: column;
+  background: var(--bg); border: 1px solid var(--line);
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.modal-head, .modal-foot { display: flex; align-items: center; gap: 10px; padding: 12px 16px; }
+.modal-head { border-bottom: 1px solid var(--line); justify-content: space-between; }
+.modal-head h2 { margin: 0; }
+.modal-foot { border-top: 1px solid var(--line); flex-wrap: wrap; }
+.modal-foot .spacer { flex: 1; }
+.modal-body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; padding: 14px 16px; overflow: auto; min-height: 0; }
+.rank-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; }
+.muted { color: var(--muted); margin: 0; font-size: 13px; }
+.small { font-size: 12px; }
+.rank-list { display: flex; flex-direction: column; gap: 4px; }
+.rank-row {
+  display: grid; grid-template-columns: 26px 78px minmax(90px, 1fr) 64px auto;
+  align-items: center; gap: 10px;
+  background: var(--slot); padding: 5px 8px;
+  border-top: 2px solid transparent; border-bottom: 2px solid transparent;
+  cursor: grab;
+}
+.rank-row.dragging { opacity: .4; }
+.rank-row.drop-before { border-top-color: var(--cyan); }
+.rank-row.drop-after { border-bottom-color: var(--cyan); }
+.rank-row .rk { font: 700 17px/1 var(--font-label); color: var(--cyan); text-align: right; font-variant-numeric: tabular-nums; }
+.rank-row .rt { display: flex; align-items: center; gap: 6px; font: 700 16px/1 var(--font-label); min-width: 0; }
+.slider { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.slider input { width: 100%; margin: 0; accent-color: var(--cyan); cursor: pointer; }
+.slider .ends { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); }
+.wr { display: flex; flex-direction: column; align-items: flex-end; font-family: var(--font-label); font-variant-numeric: tabular-nums; }
+.wr b { font-size: 16px; }
+.wr small { font-size: 11px; color: var(--muted); }
+.mv { display: flex; gap: 2px; }
+.icon-btn {
+  appearance: none; border: 1px solid var(--line); background: transparent; color: var(--fg);
+  width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+  font: 600 15px/1 var(--font-label); cursor: pointer;
+}
+.icon-btn:hover:not(:disabled) { border-color: var(--cyan); background: var(--slot-hover); }
+.icon-btn:disabled { opacity: .3; cursor: default; }
+.rank-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.h2h { background: var(--panel); border: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.h2h-pick { display: flex; align-items: center; gap: 8px; }
+.h2h-pick select { flex: 1; min-width: 0; background: var(--slot); color: var(--fg); border: 1px solid var(--line); padding: 6px; font: 600 14px var(--font-label); }
+.h2h-line { display: flex; justify-content: space-between; align-items: center; font: 700 16px/1 var(--font-label); }
+.h2h-line > span:not(.muted) { display: flex; align-items: center; gap: 6px; }
+.h2h-pcts { display: flex; justify-content: space-between; font: 700 24px/1 var(--font-label); font-variant-numeric: tabular-nums; }
+.h2h-pcts b:first-child { color: var(--cyan); }
+.h2h-pcts b:last-child { color: var(--odds-b); }
+.h2h-pcts.sub { font-size: 13px; font-weight: 600; color: var(--muted); }
+@media (max-width: 760px) {
+  .modal-body { grid-template-columns: 1fr; }
+  .rank-side { order: -1; }
+  .rank-row { grid-template-columns: 22px 64px minmax(70px, 1fr) 52px auto; gap: 6px; }
+}
 @media (hover: none) { .btn kbd, .vs .num { display: none; } }
 .btn svg { width: 15px; height: 15px; }
 :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
@@ -317,7 +389,9 @@ footer a { color: var(--muted); }
   :root { --col-min: 148px; }
   .team { font-size: 14px; gap: 4px; padding: 4px 5px; }
   .team .logo { width: 20px; height: 20px; }
-  .vs { font-size: 13px; }
+  .vs { font-size: 13px; padding: 0 1px; }
+  .odds { font-size: 10px; gap: 2px; }
+  .bar { min-width: 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -343,6 +417,11 @@ footer a { color: var(--muted); }
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13.5 6A5.5 5.5 0 0 0 3 4.5"/><path d="M3 1.5v3h3"/><path d="M2.5 10A5.5 5.5 0 0 0 13 11.5"/><path d="M13 14.5v-3h-3"/></svg>
       重新抽籤 <kbd>R</kbd>
     </button>
+    <button class="btn" id="btn-rank" type="button" title="設定 1–16 名排名與勝率">我的排名</button>
+    <span class="btn-pair">
+      <button class="btn" id="btn-ranked" type="button" title="本輪未選的場次依排名勝率擲骰 (E)">排名勝率 <kbd>E</kbd></button>
+      <button class="btn" id="btn-ranked-all" type="button" title="依排名勝率跑完整個瑞士輪 (Shift+E)">跑完 <kbd>⇧E</kbd></button>
+    </span>
     <span class="btn-pair">
       <button class="btn" id="btn-bias" type="button" title="本輪未選的場次：LCK/LPL 對其他賽區必勝，LCK/LPL 互打或其他賽區互打各 50% (Q)">LCK/LPL Bias <kbd>Q</kbd></button>
       <button class="btn" id="btn-bias-all" type="button" title="用 LCK/LPL Bias 跑完整個瑞士輪 (Shift+Q)">跑完 <kbd>⇧Q</kbd></button>
@@ -360,7 +439,7 @@ footer a { color: var(--muted); }
       <div class="bracket-heads" id="heads"></div>
       <div class="bracket" id="bracket"></div>
     </div>
-    <p class="how">點隊伍＝選那隊贏，再點一次取消；也可以按數字鍵 1–8（⇧ 選右邊）。整輪選完後按「抽籤」產生下一輪：同戰績的隊伍隨機配對，不會遇到已經交手過的對手。「重新抽籤」會重抽最新一輪，「倒退」可以一步步回到之前任何狀態。進度會存在這台瀏覽器。</p>
+    <p class="how">點隊伍＝選那隊贏，也可以按數字鍵 1–8（⇧ 選右邊）。一輪選完會自動抽下一輪：同戰績的隊伍隨機配對，不會遇到已經交手過的對手。改前面輪次的結果，之後的輪次會重抽。VS 位置的百分比是依「我的排名」算出的勝率。進度會存在這台瀏覽器。</p>
 
   </section>
 
@@ -378,6 +457,38 @@ footer a { color: var(--muted); }
 </div>
 
 <div class="toast" id="toast" hidden></div>
+
+<div class="modal" id="rank-modal" hidden role="dialog" aria-modal="true" aria-labelledby="rank-title">
+  <div class="modal-panel">
+    <div class="modal-head">
+      <h2 id="rank-title">我的排名</h2>
+      <button type="button" class="icon-btn" id="rank-close" aria-label="關閉">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="rank-col">
+        <p class="muted">拖曳或用 ↑↓ 排出 1–16 名。百分比是對「平均隊伍」的勝率；滑桿最多調到上一名或下一名的勝率。</p>
+        <div class="rank-list" id="rank-list"></div>
+      </div>
+      <aside class="rank-side">
+        <div class="h2h">
+          <div class="h2h-pick">
+            <select id="h2h-a" aria-label="隊伍 A"></select>
+            <span class="muted">vs</span>
+            <select id="h2h-b" aria-label="隊伍 B"></select>
+          </div>
+          <div id="h2h-out"></div>
+        </div>
+        <p class="muted small">兩隊對戰勝率＝把各自的勝率換成實力值後比較（Bradley–Terry）。BO3 用單場勝率模擬三戰兩勝，所以強隊在 BO3 更穩。勝率高只代表比較可能贏，模擬時仍然會爆冷。</p>
+      </aside>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn" id="rank-reset">重設排名</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="rank-cancel">取消</button>
+      <button type="button" class="btn primary" id="rank-save">儲存排名</button>
+    </div>
+  </div>
+</div>
 
 <script>
 (() => {
@@ -433,6 +544,31 @@ footer a { color: var(--muted); }
     { head: 'Final',   items: [{ result: '3-2' }, { result: '2-3' }] },
   ];
 
+  // ---------- ranking model ----------
+  // Rank 1..16 maps linearly to a win rate vs an average team (75% → 25%). Each team's slider shifts it by up to
+  // one rank step either way (i.e. to the neighbour's rate). Head-to-head uses Bradley–Terry on the logits; a BO3
+  // series is simulated from the single-game probability.
+  const RANK_KEY = 'worlds2026-ranking-v1';
+  const DEFAULT_ORDER = ['GEN','AL','HLE','BLG','T1','TES','DK','IG','G2','MKOI','KC','TL','TSW','LYON','CFO','LOS'];
+  const P_TOP = 0.75, P_BOTTOM = 0.25, STEP = (P_TOP - P_BOTTOM) / 15;
+  const defaultRanking = () => ({ order: DEFAULT_ORDER.slice(), adj: {} });
+  let ranking = defaultRanking();
+  try {
+    const r = JSON.parse(localStorage.getItem(RANK_KEY) || 'null');
+    if (r && Array.isArray(r.order) && r.order.length === 16 && DEFAULT_ORDER.every((c) => r.order.includes(c))) {
+      ranking = { order: r.order, adj: r.adj && typeof r.adj === 'object' ? r.adj : {} };
+    }
+  } catch (e) {}
+  const saveRanking = () => { try { localStorage.setItem(RANK_KEY, JSON.stringify(ranking)); } catch (e) {} };
+  const clampAdj = (v) => Math.max(-1, Math.min(1, +v || 0));
+  const teamP = (c, rk = ranking) => P_TOP - rk.order.indexOf(c) * STEP + clampAdj(rk.adj[c]) * STEP;
+  const logit = (p) => Math.log(p / (1 - p));
+  const gameP = (a, b, rk = ranking) => 1 / (1 + Math.exp(logit(teamP(b, rk)) - logit(teamP(a, rk))));
+  const seriesP = (p, bo) => (bo === 'BO3' ? p * p * (3 - 2 * p) : p);
+  const boOf = (ri, rec) => ROUNDS[ri].groups.find((g) => g.rec === rec).bo;
+  const matchP = (m, ri) => seriesP(gameP(m.a, m.b), boOf(ri, m.rec));
+  const pct = (p) => Math.round(p * 100);
+
   const STORE_KEY = 'worlds2026-swiss-v1';
   const freshState = () => ({
     rounds: [{ matches: ROUND1.map(([a, b]) => ({ a, b, w: null, rec: '0-0' })) }],
@@ -453,12 +589,16 @@ footer a { color: var(--muted); }
   const save = () => {
     try { localStorage.setItem(STORE_KEY, JSON.stringify({ state, history: history.slice(-150) })); } catch (e) {}
   };
-  const commit = (mutate) => {
+  const commit = (mutate, deal) => {
     history.push(JSON.stringify(state));
     if (history.length > 150) history.shift();
+    const before = state.rounds.length;
     mutate();
     save();
+    dealRound = deal != null ? deal : state.rounds.length > before ? state.rounds.length - 1 : null;
     render();
+    if (dealRound != null && deal == null) scrollToRound(dealRound);
+    dealRound = null;
   };
 
   // ---------- Swiss logic ----------
@@ -528,19 +668,25 @@ footer a { color: var(--muted); }
   const signature = (rd) => rd.matches.map((m) => [m.a, m.b].sort().join('-')).sort().join(',');
 
   // ---------- actions ----------
+  // A finished round draws the next one right away.
+  const autoAdvance = () => { if (canDraw()) state.rounds.push(drawRound(state.rounds.length)); };
   function pick(ri, mi, team) {
-    if (ri !== latest()) return;
+    const rd = state.rounds[ri];
+    if (!rd || !rd.matches[mi]) return;
+    const earlier = ri < latest();
+    // In an earlier round only switching the winner does something; it throws away the rounds after it.
+    if (earlier && rd.matches[mi].w === team) return;
     commit(() => {
+      state.rounds.length = ri + 1;
       const m = state.rounds[ri].matches[mi];
       m.w = m.w === team ? null : team;
+      autoAdvance();
     });
+    if (earlier) toast(`改了 Round ${ri + 1}，之後的輪次已重抽（可按倒退復原）`);
   }
   function drawNext() {
     if (!canDraw()) return;
-    const i = state.rounds.length;
-    commit(() => { state.rounds.push(drawRound(i)); });
-    dealRound = i; render(); dealRound = null;
-    scrollToRound(i);
+    commit(() => { state.rounds.push(drawRound(state.rounds.length)); });
   }
   function redraw() {
     const i = latest();
@@ -548,8 +694,7 @@ footer a { color: var(--muted); }
     const before = signature(state.rounds[i]);
     let next = drawRound(i);
     for (let k = 0; k < 40 && signature(next) === before; k++) next = drawRound(i);
-    commit(() => { state.rounds[i] = next; });
-    dealRound = i; render(); dealRound = null;
+    commit(() => { state.rounds[i] = next; }, i);
     if (signature(next) === before) toast('這一輪只有這一種不重複的組合');
   }
   // Winner pickers. 'bias': an LCK/LPL team always beats a team from any other region;
@@ -559,6 +704,7 @@ footer a { color: var(--muted); }
   const coin = (m) => (Math.random() < .5 ? m.a : m.b);
   const PICKERS = {
     random: coin,
+    ranked: (m, ri) => (Math.random() < matchP(m, ri) ? m.a : m.b),
     bias: (m) => {
       const ma = MAJOR.has(region(m.a)), mb = MAJOR.has(region(m.b));
       if (ma !== mb) return ma ? m.a : m.b;
@@ -568,13 +714,15 @@ footer a { color: var(--muted); }
   function simulateRound(mode = 'random') {
     const rd = state.rounds[latest()];
     if (rd.matches.every((m) => m.w)) return;
-    commit(() => rd.matches.forEach((m) => { if (!m.w) m.w = PICKERS[mode](m); }));
+    const ri = latest();
+    commit(() => { rd.matches.forEach((m) => { if (!m.w) m.w = PICKERS[mode](m, ri); }); autoAdvance(); });
   }
   function simulateAll(mode = 'random') {
     if (finished()) return;
     commit(() => {
       for (;;) {
-        state.rounds[latest()].matches.forEach((m) => { if (!m.w) m.w = PICKERS[mode](m); });
+        const ri = latest();
+        state.rounds[ri].matches.forEach((m) => { if (!m.w) m.w = PICKERS[mode](m, ri); });
         if (state.rounds.length >= ROUNDS.length) break;
         state.rounds.push(drawRound(state.rounds.length));
       }
@@ -630,13 +778,19 @@ footer a { color: var(--muted); }
   }
 
   // ---------- rendering ----------
-  function teamBtn(m, side, ri, mi, locked) {
+  function teamBtn(m, side, ri, mi, earlier) {
     const c = m[side];
     const cls = ['team', side === 'b' ? 'right' : ''];
     if (m.w) cls.push(m.w === c ? 'win' : 'lose');
+    const hint = earlier ? (m.w === c ? '' : '：改選這隊贏（之後的輪次會重抽）') : '：選這隊贏';
     return `<button type="button" class="${cls.join(' ')}" data-r="${ri}" data-m="${mi}" data-t="${c}"
-      ${locked ? 'disabled' : ''} title="${TEAMS[c].name}（${TEAMS[c].seed}）${locked ? '' : '：選這隊贏'}"
+      title="${TEAMS[c].name}（${TEAMS[c].seed}）${hint}"
       aria-pressed="${m.w === c}">${logo(c)}<span class="code">${label(c)}</span></button>`;
+  }
+  function oddsHtml(m, ri) {
+    const pa = pct(matchP(m, ri)), pb = 100 - pa;
+    return `<span class="odds" title="依「我的排名」估計的${boOf(ri, m.rec)}勝率"><span class="${pa >= pb ? 'fav' : ''}">${pa}</span><span class="${pb > pa ? 'fav' : ''}">${pb}</span></span>`
+      + `<span class="bar" aria-hidden="true"><i style="width:${pa}%"></i></span>`;
   }
   function roundGroups(ri) {
     const rd = state.rounds[ri];
@@ -648,7 +802,7 @@ footer a { color: var(--muted); }
         rd.matches.forEach((m, mi) => {
           if (m.rec !== g.rec) return;
           const num = locked ? '' : `<span class="num" title="快速鍵 ${mi + 1}／⇧${mi + 1}">${mi + 1}</span>`;
-          html += `<div class="match${locked ? ' locked' : ''}">${teamBtn(m, 'a', ri, mi, locked)}<span class="vs">${num}VS</span>${teamBtn(m, 'b', ri, mi, locked)}</div>`;
+          html += `<div class="match${locked ? ' locked' : ''}">${teamBtn(m, 'a', ri, mi, locked)}<span class="vs">${num}${oddsHtml(m, ri)}</span>${teamBtn(m, 'b', ri, mi, locked)}</div>`;
         });
       } else {
         for (let k = 0; k < g.n; k++) html += `<div class="match placeholder"><span class="team empty"></span><span class="vs">VS</span><span class="team empty"></span></div>`;
@@ -722,7 +876,7 @@ footer a { color: var(--muted); }
     } else if (left) {
       msg = `<b>Round ${i + 1}</b>　還有 ${left} 場要選勝方`;
     } else {
-      msg = `<b>Round ${i + 1}</b> 已選完，按「抽籤 Round ${i + 2}」產生下一輪`;
+      msg = `<b>Round ${i + 1}</b> 已選完`;
     }
     document.getElementById('status').innerHTML = msg;
     document.getElementById('btn-undo').disabled = !history.length;
@@ -731,6 +885,8 @@ footer a { color: var(--muted); }
     document.getElementById('btn-bias').disabled = !left;
     document.getElementById('btn-auto').disabled = finished();
     document.getElementById('btn-bias-all').disabled = finished();
+    document.getElementById('btn-ranked').disabled = !left;
+    document.getElementById('btn-ranked-all').disabled = finished();
   }
   function render() { renderBracket(); renderTable(); renderStatus(); }
 
@@ -747,9 +903,138 @@ footer a { color: var(--muted); }
   document.getElementById('btn-auto').addEventListener('click', () => simulateAll('random'));
   document.getElementById('btn-bias').addEventListener('click', () => simulateRound('bias'));
   document.getElementById('btn-bias-all').addEventListener('click', () => simulateAll('bias'));
+  document.getElementById('btn-ranked').addEventListener('click', () => simulateRound('ranked'));
+  document.getElementById('btn-ranked-all').addEventListener('click', () => simulateAll('ranked'));
   document.getElementById('btn-copy').addEventListener('click', copyResult);
   document.getElementById('btn-reset').addEventListener('click', reset);
 
+
+  // ---------- My Rankings panel ----------
+  const rankModal = document.getElementById('rank-modal');
+  const rankList = document.getElementById('rank-list');
+  const h2hA = document.getElementById('h2h-a'), h2hB = document.getElementById('h2h-b');
+  let draft = null;
+  const fmtP = (p) => `${(p * 100).toFixed(1)}%`;
+  const fmtAdj = (v) => (v ? `${v > 0 ? '+' : '−'}${Math.abs(v * STEP * 100).toFixed(1)}` : '±0');
+
+  function renderRankList(focusSel) {
+    rankList.innerHTML = draft.order.map((c, i) => {
+      const v = clampAdj(draft.adj[c]);
+      return `<div class="rank-row" draggable="true" data-c="${c}">
+        <span class="rk">${i + 1}</span>
+        <span class="rt">${logo(c)}<span>${label(c)}</span></span>
+        <span class="slider">
+          <input type="range" id="adj-${c}" min="-1" max="1" step="0.05" value="${v}" aria-label="${label(c)} 勝率微調">
+          <span class="ends"><span>較弱</span><span>預設</span><span>較強</span></span>
+        </span>
+        <span class="wr"><b data-wr="${c}">${fmtP(teamP(c, draft))}</b><small data-adj="${c}">${fmtAdj(v)}</small></span>
+        <span class="mv">
+          <button type="button" class="icon-btn" data-move="-1" data-c="${c}" aria-label="${label(c)} 往上" ${i === 0 ? 'disabled' : ''}>↑</button>
+          <button type="button" class="icon-btn" data-move="1" data-c="${c}" aria-label="${label(c)} 往下" ${i === 15 ? 'disabled' : ''}>↓</button>
+        </span>
+      </div>`;
+    }).join('');
+    if (focusSel) { const el = rankList.querySelector(focusSel); if (el && !el.disabled) el.focus(); }
+    renderH2H();
+  }
+  function fillH2HSelects() {
+    const opts = draft.order.map((c, i) => `<option value="${c}">#${i + 1} ${label(c)}</option>`).join('');
+    const a = h2hA.value || draft.order[0], b = h2hB.value || draft.order[1];
+    h2hA.innerHTML = opts; h2hB.innerHTML = opts;
+    h2hA.value = a; h2hB.value = b;
+  }
+  function renderH2H() {
+    fillH2HSelects();
+    const a = h2hA.value, b = h2hB.value;
+    const p1 = gameP(a, b, draft), p3 = seriesP(p1, 'BO3');
+    document.getElementById('h2h-out').innerHTML = a === b ? '<p class="muted">選兩支不同的隊伍</p>' : `
+      <div class="h2h-line"><span>${logo(a)}${label(a)}</span><span class="muted">BO1</span><span>${label(b)}${logo(b)}</span></div>
+      <div class="h2h-pcts"><b>${fmtP(p1)}</b><b>${fmtP(1 - p1)}</b></div>
+      <span class="bar big" aria-hidden="true"><i style="width:${p1 * 100}%"></i></span>
+      <div class="h2h-pcts sub"><span>BO3 ${fmtP(p3)}</span><span>${fmtP(1 - p3)}</span></div>`;
+  }
+  function moveTeam(c, to) {
+    const from = draft.order.indexOf(c);
+    if (to < 0 || to > 15 || to === from) return;
+    draft.order.splice(from, 1);
+    draft.order.splice(to, 0, c);
+  }
+  let lastFocus = null;
+  function openRankings() {
+    draft = JSON.parse(JSON.stringify(ranking));
+    h2hA.value = ''; h2hB.value = '';
+    lastFocus = document.activeElement;
+    rankModal.hidden = false;
+    document.body.classList.add('modal-open');
+    renderRankList();
+    document.getElementById('rank-close').focus();
+  }
+  function closeRankings() {
+    rankModal.hidden = true;
+    document.body.classList.remove('modal-open');
+    draft = null;
+    const back = document.getElementById('btn-rank');
+    (lastFocus && lastFocus !== document.body ? lastFocus : back).focus();
+  }
+  document.getElementById('btn-rank').addEventListener('click', openRankings);
+  document.getElementById('rank-close').addEventListener('click', closeRankings);
+  document.getElementById('rank-cancel').addEventListener('click', closeRankings);
+  rankModal.addEventListener('click', (e) => { if (e.target === rankModal) closeRankings(); });
+  document.getElementById('rank-reset').addEventListener('click', () => { draft = defaultRanking(); h2hA.value = ''; h2hB.value = ''; renderRankList(); });
+  document.getElementById('rank-save').addEventListener('click', () => {
+    ranking = draft; saveRanking(); closeRankings(); render(); toast('已儲存排名');
+  });
+  h2hA.addEventListener('change', renderH2H);
+  h2hB.addEventListener('change', renderH2H);
+  rankList.addEventListener('input', (e) => {
+    const c = e.target.id && e.target.id.slice(4);
+    if (!c || !TEAMS[c]) return;
+    draft.adj[c] = clampAdj(e.target.value);
+    rankList.querySelector(`[data-wr="${c}"]`).textContent = fmtP(teamP(c, draft));
+    rankList.querySelector(`[data-adj="${c}"]`).textContent = fmtAdj(draft.adj[c]);
+    renderH2H();
+  });
+  rankList.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-move]');
+    if (!b) return;
+    const c = b.dataset.c, d = +b.dataset.move;
+    moveTeam(c, draft.order.indexOf(c) + d);
+    renderRankList(`[data-c="${c}"][data-move="${d}"]`);
+  });
+  // drag to reorder (desktop)
+  let dragC = null;
+  rankList.addEventListener('dragstart', (e) => {
+    const row = e.target.closest && e.target.closest('.rank-row');
+    if (!row || e.target.tagName === 'INPUT') { e.preventDefault(); return; }
+    dragC = row.dataset.c; row.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', dragC); } catch (err) {}
+  });
+  rankList.addEventListener('dragover', (e) => {
+    if (!dragC) return;
+    const row = e.target.closest('.rank-row');
+    if (!row) return;
+    e.preventDefault();
+    rankList.querySelectorAll('.drop-before, .drop-after').forEach((r) => r.classList.remove('drop-before', 'drop-after'));
+    const after = e.clientY > row.getBoundingClientRect().top + row.offsetHeight / 2;
+    row.classList.add(after ? 'drop-after' : 'drop-before');
+  });
+  rankList.addEventListener('drop', (e) => {
+    const row = e.target.closest('.rank-row');
+    if (!dragC || !row) return;
+    e.preventDefault();
+    const after = row.classList.contains('drop-after');
+    const target = row.dataset.c;
+    if (target !== dragC) {
+      draft.order.splice(draft.order.indexOf(dragC), 1);
+      draft.order.splice(draft.order.indexOf(target) + (after ? 1 : 0), 0, dragC);
+    }
+    dragC = null; renderRankList();
+  });
+  rankList.addEventListener('dragend', () => {
+    dragC = null;
+    rankList.querySelectorAll('.dragging, .drop-before, .drop-after').forEach((r) => r.classList.remove('dragging', 'drop-before', 'drop-after'));
+  });
 
   // Mouse clicks shouldn't leave focus on a button, or Space/Enter would re-press it instead of drawing.
   document.addEventListener('click', (e) => {
@@ -764,6 +1049,10 @@ footer a { color: var(--muted); }
   }
   document.addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
+    if (!rankModal.hidden) {
+      if (k === 'escape') { e.preventDefault(); closeRankings(); }
+      return;
+    }
     if (e.metaKey || e.ctrlKey) {
       if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
       return;
@@ -775,6 +1064,7 @@ footer a { color: var(--muted); }
     if (digit) pickByKey(+digit[1], e.shiftKey);
     else if (k === 'q') e.shiftKey ? simulateAll('bias') : simulateRound('bias');
     else if (k === 'w') e.shiftKey ? simulateAll('random') : simulateRound('random');
+    else if (k === 'e') e.shiftKey ? simulateAll('ranked') : simulateRound('ranked');
     else if (k === ' ' || k === 'enter') {
       // let Enter/Space activate a focused button as usual
       if (e.target.closest && e.target.closest('button')) return;

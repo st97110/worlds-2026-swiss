@@ -36,6 +36,7 @@
   --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; }
 body {
   background: radial-gradient(ellipse 90% 60% at 50% 105%, var(--bg-glow), transparent 70%), var(--bg);
@@ -121,22 +122,10 @@ h1 {
 .btn:disabled { opacity: .38; cursor: not-allowed; }
 .btn.primary { background: var(--cyan); color: var(--cyan-ink); border-color: var(--cyan); }
 .btn.primary:hover:not(:disabled) { background: #8cefff; }
-.btn kbd, .help kbd { font: inherit; font-size: 12px; opacity: .6; }
-.help kbd { opacity: 1; display: inline-block; min-width: 20px; padding: 2px 5px; border: 1px solid var(--line); background: var(--slot); text-align: center; font-family: var(--font-label); font-weight: 600; }
+.btn kbd { font: inherit; font-size: 12px; opacity: .6; }
 .btn-pair { display: inline-flex; }
 .btn-pair .btn + .btn { border-left: 0; }
 #btn-bias:not(:disabled), #btn-bias-all:not(:disabled) { border-color: color-mix(in srgb, var(--cyan) 45%, var(--line)); }
-.help {
-  border: 1px solid var(--line);
-  background: var(--panel);
-  padding: 14px 16px;
-  display: flex; flex-direction: column; gap: 10px;
-}
-.help-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.help dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; align-items: center; }
-.help dt { white-space: nowrap; }
-.help dd { margin: 0; color: var(--muted); }
-.help p { margin: 0; color: var(--muted); font-size: 13px; max-width: 70ch; }
 .vs { display: flex; flex-direction: column; align-items: center; line-height: 1; }
 .vs .num { font: 600 11px/1 var(--font-label); color: var(--cyan); letter-spacing: .04em; margin-bottom: 2px; }
 @media (hover: none) { .btn kbd, .vs .num { display: none; } }
@@ -364,25 +353,6 @@ footer a { color: var(--muted); }
     </span>
     <button class="btn" id="btn-copy" type="button" title="複製晉級／淘汰名單 (C)">複製結果 <kbd>C</kbd></button>
     <button class="btn" id="btn-reset" type="button">重置</button>
-    <button class="btn" id="btn-help" type="button" title="鍵盤快速鍵 (?)" aria-expanded="false" aria-controls="help">?</button>
-  </div>
-
-  <div class="help" id="help" hidden>
-    <div class="help-head"><b>鍵盤快速鍵</b><button class="btn" id="btn-help-close" type="button">關閉 <kbd>Esc</kbd></button></div>
-    <dl>
-      <dt><kbd>1</kbd>–<kbd>8</kbd></dt><dd>本輪第 N 場選左邊（上方）隊伍贏</dd>
-      <dt><kbd>⇧</kbd> + <kbd>1</kbd>–<kbd>8</kbd></dt><dd>本輪第 N 場選右邊隊伍贏</dd>
-      <dt><kbd>Space</kbd> / <kbd>Enter</kbd></dt><dd>抽下一輪</dd>
-      <dt><kbd>R</kbd></dt><dd>重新抽籤（最新一輪）</dd>
-      <dt><kbd>Z</kbd> / <kbd>⌘Z</kbd> / <kbd>Backspace</kbd></dt><dd>倒退一步</dd>
-      <dt><kbd>Q</kbd></dt><dd>LCK/LPL Bias 填完本輪</dd>
-      <dt><kbd>⇧Q</kbd></dt><dd>LCK/LPL Bias 跑完整個瑞士輪</dd>
-      <dt><kbd>W</kbd></dt><dd>50/50 隨機填完本輪</dd>
-      <dt><kbd>⇧W</kbd></dt><dd>50/50 隨機跑完整個瑞士輪</dd>
-      <dt><kbd>C</kbd></dt><dd>複製結果</dd>
-      <dt><kbd>?</kbd></dt><dd>開關這個說明</dd>
-    </dl>
-    <p>LCK/LPL Bias：LCK、LPL 隊伍遇到其他賽區一定贏；LCK 與 LPL 互打、同賽區互打、或兩隊都不是 LCK/LPL 時各 50%。</p>
   </div>
 
   <section aria-label="瑞士輪對戰表">
@@ -390,7 +360,7 @@ footer a { color: var(--muted); }
       <div class="bracket-heads" id="heads"></div>
       <div class="bracket" id="bracket"></div>
     </div>
-    <p class="how">點隊伍＝選那隊贏，再點一次取消；也可以按數字鍵 1–8（⇧ 選右邊），按 ? 看全部快速鍵。整輪選完後按「抽籤」產生下一輪：同戰績的隊伍隨機配對，不會遇到已經交手過的對手。「重新抽籤」會重抽最新一輪，「倒退」可以一步步回到之前任何狀態。進度會存在這台瀏覽器。</p>
+    <p class="how">點隊伍＝選那隊贏，再點一次取消；也可以按數字鍵 1–8（⇧ 選右邊）。整輪選完後按「抽籤」產生下一輪：同戰績的隊伍隨機配對，不會遇到已經交手過的對手。「重新抽籤」會重抽最新一輪，「倒退」可以一步步回到之前任何狀態。進度會存在這台瀏覽器。</p>
 
   </section>
 
@@ -780,11 +750,6 @@ footer a { color: var(--muted); }
   document.getElementById('btn-copy').addEventListener('click', copyResult);
   document.getElementById('btn-reset').addEventListener('click', reset);
 
-  const helpEl = document.getElementById('help');
-  const helpBtn = document.getElementById('btn-help');
-  const toggleHelp = (open = helpEl.hidden) => { helpEl.hidden = !open; helpBtn.setAttribute('aria-expanded', open); };
-  helpBtn.addEventListener('click', () => toggleHelp());
-  document.getElementById('btn-help-close').addEventListener('click', () => toggleHelp(false));
 
   // Mouse clicks shouldn't leave focus on a button, or Space/Enter would re-press it instead of drawing.
   document.addEventListener('click', (e) => {
@@ -818,8 +783,6 @@ footer a { color: var(--muted); }
     else if (k === 'r') redraw();
     else if (k === 'z' || k === 'backspace') undo();
     else if (k === 'c') copyResult();
-    else if (k === '?' || (k === '/' && e.shiftKey)) toggleHelp();
-    else if (k === 'escape' && !helpEl.hidden) toggleHelp(false);
     else handled = false;
     if (handled) e.preventDefault();
   });

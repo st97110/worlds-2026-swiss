@@ -323,7 +323,7 @@ footer a { color: var(--muted); }
 <div class="wrap">
   <header>
     <h1>WORLDS 2026</h1>
-    <div class="strap"><span>Swiss Stage 預測 · Friday, October 23 at 12:00 CDT</span></div>
+    <div class="strap"><span>Swiss Stage 預測 · Saturday, October 24 at 01:00 TST (UTC+8)</span></div>
   </header>
 
   <div class="toolbar" role="toolbar" aria-label="預測操作">
@@ -394,12 +394,13 @@ footer a { color: var(--muted); }
     ['HLE','TES'], ['LOS','T1'], ['TSW','LYON'], ['BLG','MKOI'],
   ];
 
+  // Dates in Taiwan time (TST, UTC+8): each match day starts 12:00 CDT = 01:00 TST the next day.
   const ROUNDS = [
-    { groups: [{ rec: '0-0', date: 'OCT. 23', bo: 'BO1', n: 8 }] },
-    { groups: [{ rec: '1-0', date: 'OCT. 24', bo: 'BO1', n: 4 }, { rec: '0-1', date: 'OCT. 24', bo: 'BO1', n: 4 }] },
-    { groups: [{ rec: '2-0', date: 'OCT. 25', bo: 'BO1', n: 2 }, { rec: '1-1', date: 'OCT. 25 & 26', bo: 'BO3', n: 4 }, { rec: '0-2', date: 'OCT. 26', bo: 'BO1', n: 2 }] },
-    { groups: [{ rec: '2-1', date: 'OCT. 28–30', bo: 'BO3', n: 3 }, { rec: '1-2', date: 'OCT. 28–30', bo: 'BO3', n: 3 }] },
-    { groups: [{ rec: '2-2', date: 'OCT. 31', bo: 'BO3', n: 3 }] },
+    { groups: [{ rec: '0-0', date: 'OCT. 24', bo: 'BO1', n: 8 }] },
+    { groups: [{ rec: '1-0', date: 'OCT. 25', bo: 'BO1', n: 4 }, { rec: '0-1', date: 'OCT. 25', bo: 'BO1', n: 4 }] },
+    { groups: [{ rec: '2-0', date: 'OCT. 26', bo: 'BO1', n: 2 }, { rec: '1-1', date: 'OCT. 26 & 27', bo: 'BO3', n: 4 }, { rec: '0-2', date: 'OCT. 27', bo: 'BO1', n: 2 }] },
+    { groups: [{ rec: '2-1', date: 'OCT. 29–31', bo: 'BO3', n: 3 }, { rec: '1-2', date: 'OCT. 29–31', bo: 'BO3', n: 3 }] },
+    { groups: [{ rec: '2-2', date: 'NOV. 1', bo: 'BO3', n: 3 }] },
   ];
   const RESULTS = {
     '3-0': { adv: true,  label: 'ADVANCES', place: '1ST / 2ND', n: 2 },

@@ -160,12 +160,14 @@ body.modal-open { overflow: hidden; }
 .small { font-size: 12px; }
 .rank-list { display: flex; flex-direction: column; gap: 4px; }
 .rank-row {
-  display: grid; grid-template-columns: 26px 78px minmax(90px, 1fr) 64px auto;
+  display: grid; grid-template-columns: 14px 22px 78px minmax(90px, 1fr) 64px auto;
   align-items: center; gap: 10px;
   background: var(--slot); padding: 5px 8px;
   border-top: 2px solid transparent; border-bottom: 2px solid transparent;
-  cursor: grab;
 }
+.rank-row .grip { cursor: grab; color: var(--muted); font-size: 16px; line-height: 1; user-select: none; text-align: center; }
+.rank-row .grip:hover { color: var(--cyan); }
+.rank-row .grip:active { cursor: grabbing; }
 .rank-row.dragging { opacity: .4; }
 .rank-row.drop-before { border-top-color: var(--cyan); }
 .rank-row.drop-after { border-bottom-color: var(--cyan); }
@@ -198,7 +200,8 @@ body.modal-open { overflow: hidden; }
 @media (max-width: 760px) {
   .modal-body { grid-template-columns: 1fr; }
   .rank-side { order: -1; }
-  .rank-row { grid-template-columns: 22px 64px minmax(70px, 1fr) 52px auto; gap: 6px; }
+  .rank-row { grid-template-columns: 0 18px 64px minmax(70px, 1fr) 52px auto; gap: 6px; }
+  .rank-row .grip { visibility: hidden; }
 }
 @media (hover: none) { .btn kbd, .vs .num { display: none; } }
 .btn svg { width: 15px; height: 15px; }
@@ -920,7 +923,8 @@ footer a { color: var(--muted); }
   function renderRankList(focusSel) {
     rankList.innerHTML = draft.order.map((c, i) => {
       const v = clampAdj(draft.adj[c]);
-      return `<div class="rank-row" draggable="true" data-c="${c}">
+      return `<div class="rank-row" data-c="${c}">
+        <span class="grip" draggable="true" title="拖曳調整排名" aria-hidden="true">⠿</span>
         <span class="rk">${i + 1}</span>
         <span class="rt">${logo(c)}<span>${label(c)}</span></span>
         <span class="slider">
@@ -1004,11 +1008,13 @@ footer a { color: var(--muted); }
   // drag to reorder (desktop)
   let dragC = null;
   rankList.addEventListener('dragstart', (e) => {
-    const row = e.target.closest && e.target.closest('.rank-row');
-    if (!row || e.target.tagName === 'INPUT') { e.preventDefault(); return; }
+    // only the grip handle starts a drag, so the slider can be dragged freely
+    const grip = e.target.closest && e.target.closest('.grip');
+    if (!grip) { e.preventDefault(); return; }
+    const row = grip.closest('.rank-row');
     dragC = row.dataset.c; row.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
-    try { e.dataTransfer.setData('text/plain', dragC); } catch (err) {}
+    try { e.dataTransfer.setData('text/plain', dragC); e.dataTransfer.setDragImage(row, 20, row.offsetHeight / 2); } catch (err) {}
   });
   rankList.addEventListener('dragover', (e) => {
     if (!dragC) return;

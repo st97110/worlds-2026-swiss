@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Worlds 2026 Swiss Predictor</title>
+<meta name="description" content="英雄聯盟 2026 世界賽瑞士輪預測：選勝方、抽籤、重抽、倒退。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: broadcast-style Swiss bracket, six columns left→right (R1 … R5 + final results), progression table below. */
+:root {
+  color-scheme: dark;
+  --bg: #040a2c;
+  --bg-glow: #0b2a8f;
+  --panel: #0a1550;
+  --slot: #0c1a5a;
+  --slot-hover: #14267a;
+  --line: #22348a;
+  --fg: #eef2ff;
+  --muted: #8f9cd6;
+  --cyan: #2fe1ff;
+  --cyan-ink: #02233a;
+  --loss: #ff5c7c;
+  --loss-bg: rgba(255, 92, 124, .22);
+  --win-bg: rgba(47, 225, 255, .24);
+  --font-display: "Anton", "Impact", "Arial Narrow", sans-serif;
+  --font-label: "Barlow Condensed", "Arial Narrow", "Noto Sans TC", sans-serif;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: radial-gradient(ellipse 90% 60% at 50% 105%, var(--bg-glow), transparent 70%), var(--bg);
+  background-attachment: fixed;
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+.wrap {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ---------- header ---------- */
+header { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(44px, 9vw, 104px);
+  line-height: .95;
+  letter-spacing: .02em;
+  color: #dfe5f5;
+  text-wrap: balance;
+  text-align: center;
+}
+.strap {
+  width: 100%;
+  background: linear-gradient(90deg, transparent, rgba(47,225,255,.12) 18%, var(--cyan));
+  font-family: var(--font-label);
+  font-weight: 700;
+  font-size: clamp(15px, 2.2vw, 22px);
+  letter-spacing: .06em;
+  text-align: center;
+  padding: 6px 12px;
+  text-transform: uppercase;
+}
+.strap span { color: var(--fg); text-shadow: 0 1px 6px rgba(0,0,0,.6); }
+
+/* ---------- toolbar ---------- */
+.toolbar {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--line);
+}
+.status {
+  flex: 1 1 220px;
+  min-width: 0;
+  font-weight: 500;
+}
+.status b { color: var(--cyan); font-weight: 700; }
+.btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--slot);
+  color: var(--fg);
+  font: 600 15px/1 var(--font-label);
+  letter-spacing: .04em;
+  padding: 9px 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) { background: var(--slot-hover); border-color: var(--cyan); }
+.btn:disabled { opacity: .38; cursor: not-allowed; }
+.btn.primary { background: var(--cyan); color: var(--cyan-ink); border-color: var(--cyan); }
+.btn.primary:hover:not(:disabled) { background: #8cefff; }
+.btn kbd { font: inherit; font-size: 12px; opacity: .6; }
+.btn svg { width: 15px; height: 15px; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+/* ---------- bracket ---------- */
+.scroller { overflow-x: auto; padding-bottom: 6px; }
+.bracket {
+  display: grid;
+  grid-template-columns: repeat(6, 232px);
+  gap: 22px;
+  min-height: 660px;
+  width: max-content;
+  margin: 0 auto;
+}
+.col { display: flex; flex-direction: column; justify-content: space-around; gap: 18px; }
+.col-head {
+  font-family: var(--font-label);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: .14em;
+  color: var(--muted);
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 34px;
+  border-bottom: 1px solid var(--line);
+}
+.bracket-heads { display: grid; grid-template-columns: repeat(6, 232px); gap: 22px; width: max-content; margin: 0 auto 12px; }
+.group { display: flex; flex-direction: column; gap: 4px; }
+.group-label {
+  display: flex;
+  justify-content: space-between;
+  background: #000a2a;
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: .04em;
+  padding: 3px 8px;
+  font-variant-numeric: tabular-nums;
+}
+.group-label .rec { color: var(--cyan); }
+
+.match {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: stretch;
+  background: var(--slot);
+  border: 1px solid transparent;
+  min-height: 46px;
+}
+.match.placeholder { opacity: .55; }
+.vs {
+  align-self: center;
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: #cfd7f5;
+  padding: 0 4px;
+  letter-spacing: .02em;
+}
+.team {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+  font: 700 17px/1 var(--font-label);
+  letter-spacing: .03em;
+  cursor: pointer;
+  min-width: 0;
+  transition: background .15s, opacity .15s, filter .15s;
+}
+.team.right { flex-direction: row-reverse; text-align: right; }
+.team:hover:not(:disabled) { background: var(--slot-hover); }
+.team:disabled { cursor: default; }
+.team .code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.team.win { background: var(--cyan); color: var(--cyan-ink); }
+.team.win:hover:not(:disabled) { background: #8cefff; }
+.team.lose { opacity: .32; filter: grayscale(1); }
+.team.empty { cursor: default; }
+.logo {
+  width: 28px; height: 28px;
+  flex: none;
+  object-fit: contain;
+  filter: drop-shadow(0 0 1px rgba(255,255,255,.55));
+}
+.team.win .logo { filter: drop-shadow(0 0 1px rgba(0,0,0,.5)); }
+/* all-black marks (DK, iG, LØS, TSW) flip to white on the navy ground, stay black on cyan */
+.logo.inv { filter: invert(1) drop-shadow(0 0 1px rgba(0,0,0,.4)); }
+.team.win .logo.inv { filter: none; }
+.match.locked .team:not(.win):not(.lose) { opacity: .9; }
+
+.deal .match { animation: deal .42s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes deal { from { opacity: 0; transform: translateX(-14px) scale(.97); } }
+
+.draw-slot { display: flex; justify-content: center; }
+.draw-slot .btn { width: 100%; justify-content: center; padding-block: 12px; font-size: 17px; }
+
+.result { display: flex; flex-direction: column; gap: 4px; }
+.result-head {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-label); font-weight: 700; font-size: 14px; letter-spacing: .05em;
+  padding: 3px 8px;
+}
+.result.adv .result-head { background: var(--cyan); color: var(--cyan-ink); }
+.result.out .result-head { background: #000a2a; color: var(--muted); }
+.result-body {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  background: var(--slot);
+  padding: 7px 8px;
+  min-height: 46px;
+  align-items: center;
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font: 700 15px/1 var(--font-label);
+  padding: 3px 7px 3px 4px;
+  background: rgba(255,255,255,.06);
+}
+.chip .logo { width: 22px; height: 22px; }
+.chip.empty { width: 52px; height: 28px; background: transparent; border: 1px dashed var(--line); }
+.result.out .chip:not(.empty) { opacity: .6; }
+
+/* ---------- progression table ---------- */
+section h2 {
+  margin: 0 0 10px;
+  font-family: var(--font-label);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; min-width: 560px; width: 100%; max-width: 760px; font-variant-numeric: tabular-nums; }
+th, td { border: 1px solid var(--line); padding: 4px 6px; text-align: center; }
+thead th { background: var(--panel); font-family: var(--font-label); font-size: 15px; letter-spacing: .04em; }
+tbody th { text-align: left; font-family: var(--font-label); font-size: 16px; font-weight: 700; white-space: nowrap; }
+tbody th .inner { display: flex; align-items: center; gap: 8px; }
+td { height: 40px; width: 15%; }
+td .logo { width: 26px; height: 26px; vertical-align: middle; }
+td.w { background: var(--win-bg); }
+td.l { background: var(--loss-bg); }
+td.l .logo { opacity: .75; }
+td.p { background: rgba(255,255,255,.03); }
+td.rec { font-family: var(--font-label); font-weight: 700; font-size: 16px; }
+td.rec.adv { color: var(--cyan); }
+td.rec.out { color: var(--loss); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; color: var(--muted); font-size: 13px; }
+.legend i { display: inline-block; width: 12px; height: 12px; margin-right: 5px; vertical-align: -1px; }
+
+.how { color: var(--muted); font-size: 13px; max-width: 70ch; margin: 0; }
+footer { color: var(--muted); font-size: 12px; }
+footer a { color: var(--muted); }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  background: var(--cyan); color: var(--cyan-ink);
+  font: 700 15px/1 var(--font-label);
+  padding: 10px 16px;
+  z-index: 10;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deal .match { animation: none; }
+  .team { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>WORLDS 2026</h1>
+    <div class="strap"><span>Swiss Stage 預測 · Friday, October 23 at 12:00 CDT</span></div>
+  </header>
+
+  <div class="toolbar" role="toolbar" aria-label="預測操作">
+    <div class="status" id="status" aria-live="polite"></div>
+    <button class="btn" id="btn-undo" type="button" title="倒退一步 (Ctrl/⌘+Z)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 3 2 6l3 3"/><path d="M2 6h7.5a4 4 0 0 1 0 8H6"/></svg>
+      倒退 <kbd>⌘Z</kbd>
+    </button>
+    <button class="btn" id="btn-redraw" type="button" title="重新抽這一輪的對戰組合（會清掉本輪已選的勝方）">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13.5 6A5.5 5.5 0 0 0 3 4.5"/><path d="M3 1.5v3h3"/><path d="M2.5 10A5.5 5.5 0 0 0 13 11.5"/><path d="M13 14.5v-3h-3"/></svg>
+      重新抽籤
+    </button>
+    <button class="btn" id="btn-random" type="button" title="本輪尚未選的場次隨機決定勝方">隨機本輪</button>
+    <button class="btn" id="btn-auto" type="button" title="從目前狀態隨機跑完整個瑞士輪">隨機跑完</button>
+    <button class="btn" id="btn-copy" type="button">複製結果</button>
+    <button class="btn" id="btn-reset" type="button">重置</button>
+  </div>
+
+  <p class="how">點隊伍＝選那隊贏，再點一次取消。整輪選完後按「抽籤」產生下一輪：同戰績的隊伍隨機配對，不會遇到已經交手過的對手。「重新抽籤」會重抽最新一輪，「倒退」可以一步步回到之前任何狀態。進度會存在這台瀏覽器。</p>
+
+  <section aria-label="瑞士輪對戰表">
+    <div class="scroller">
+      <div class="bracket-heads" id="heads"></div>
+      <div class="bracket" id="bracket"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Round Progression</h2>
+    <div class="table-wrap"><table id="prog"></table></div>
+    <div class="legend">
+      <span><i style="background:var(--win-bg);outline:1px solid var(--cyan)"></i>勝（格內為對手）</span>
+      <span><i style="background:var(--loss-bg);outline:1px solid var(--loss)"></i>敗</span>
+      <span><i style="background:rgba(255,255,255,.06);outline:1px solid var(--line)"></i>已抽籤未選</span>
+    </div>
+  </section>
+
+  <footer>隊伍圖標來源：<a href="https://lol.fandom.com/wiki/2026_Season_World_Championship" target="_blank" rel="noopener">Leaguepedia</a>。非官方粉絲預測工具。</footer>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const TEAMS = {
+    AL:   { name: "Anyone's Legend",     seed: 'LPL #1' },
+    BLG:  { name: 'Bilibili Gaming',     seed: 'LPL #2' },
+    CFO:  { name: 'CTBC Flying Oyster',  seed: 'LCP #2' },
+    DK:   { name: 'Dplus KIA',           seed: 'LCK #4' },
+    G2:   { name: 'G2 Esports',          seed: 'LEC #1' },
+    GEN:  { name: 'Gen.G',               seed: 'LCK #1' },
+    HLE:  { name: 'Hanwha Life Esports', seed: 'LCK #2' },
+    IG:   { name: 'Invictus Gaming',     seed: 'LPL #4', label: 'iG' },
+    KC:   { name: 'Karmine Corp',        seed: 'LEC #3' },
+    LYON: { name: 'LYON',                seed: 'LCS #2' },
+    LOS:  { name: 'LØS',                 seed: 'CBLOL #1', label: 'LØS' },
+    MKOI: { name: 'Movistar KOI',        seed: 'LEC #2' },
+    T1:   { name: 'T1',                  seed: 'LCK #3' },
+    TL:   { name: 'Team Liquid',         seed: 'LCS #1' },
+    TSW:  { name: 'Team Secret Whales',  seed: 'LCP #1' },
+    TES:  { name: 'Top Esports',         seed: 'LPL #3' },
+  };
+  const TABLE_ORDER = ['AL','BLG','CFO','DK','G2','GEN','HLE','IG','KC','LYON','LOS','MKOI','T1','TL','TSW','TES'];
+  const ROUND1 = [
+    ['GEN','IG'], ['TL','CFO'], ['AL','KC'], ['G2','DK'],
+    ['HLE','TES'], ['LOS','T1'], ['TSW','LYON'], ['BLG','MKOI'],
+  ];
+
+  const ROUNDS = [
+    { groups: [{ rec: '0-0', date: 'OCT. 23', bo: 'BO1', n: 8 }] },
+    { groups: [{ rec: '1-0', date: 'OCT. 24', bo: 'BO1', n: 4 }, { rec: '0-1', date: 'OCT. 24', bo: 'BO1', n: 4 }] },
+    { groups: [{ rec: '2-0', date: 'OCT. 25', bo: 'BO1', n: 2 }, { rec: '1-1', date: 'OCT. 25 & 26', bo: 'BO3', n: 4 }, { rec: '0-2', date: 'OCT. 26', bo: 'BO1', n: 2 }] },
+    { groups: [{ rec: '2-1', date: 'OCT. 28–30', bo: 'BO3', n: 3 }, { rec: '1-2', date: 'OCT. 28–30', bo: 'BO3', n: 3 }] },
+    { groups: [{ rec: '2-2', date: 'OCT. 31', bo: 'BO3', n: 3 }] },
+  ];
+  const RESULTS = {
+    '3-0': { adv: true,  label: 'ADVANCES', place: '1ST / 2ND', n: 2 },
+    '3-1': { adv: true,  label: 'ADVANCES', place: '3RD – 5TH', n: 3 },
+    '3-2': { adv: true,  label: 'ADVANCES', place: '6TH – 8TH', n: 3 },
+    '0-3': { adv: false, label: 'ELIMINATED', place: '0-3', n: 2 },
+    '1-3': { adv: false, label: 'ELIMINATED', place: '1-3', n: 3 },
+    '2-3': { adv: false, label: 'ELIMINATED', place: '2-3', n: 3 },
+  };
+  // Column layout mirrors the broadcast graphic.
+  const COLUMNS = [
+    { head: 'Round 1', items: [{ round: 0 }] },
+    { head: 'Round 2', items: [{ round: 1 }] },
+    { head: 'Round 3', items: [{ round: 2 }] },
+    { head: 'Round 4', items: [{ result: '3-0' }, { round: 3 }, { result: '0-3' }] },
+    { head: 'Round 5', items: [{ result: '3-1' }, { round: 4 }, { result: '1-3' }] },
+    { head: 'Final',   items: [{ result: '3-2' }, { result: '2-3' }] },
+  ];
+
+  const STORE_KEY = 'worlds2026-swiss-v1';
+  const freshState = () => ({
+    rounds: [{ matches: ROUND1.map(([a, b]) => ({ a, b, w: null, rec: '0-0' })) }],
+  });
+
+  let state = freshState();
+  let history = [];
+  let dealRound = null;
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if (saved && saved.state && Array.isArray(saved.state.rounds)) {
+      state = saved.state;
+      history = Array.isArray(saved.history) ? saved.history : [];
+    }
+  } catch (e) { /* storage unavailable: start fresh */ }
+
+  const save = () => {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ state, history: history.slice(-150) })); } catch (e) {}
+  };
+  const commit = (mutate) => {
+    history.push(JSON.stringify(state));
+    if (history.length > 150) history.shift();
+    mutate();
+    save();
+    render();
+  };
+
+  // ---------- Swiss logic ----------
+  const label = (c) => TEAMS[c].label || c;
+  const DARK_LOGOS = new Set(['DK', 'IG', 'LOS', 'TSW']);
+  const logo = (c) => `<img class="logo${DARK_LOGOS.has(c) ? ' inv' : ''}" src="logos/${c}.webp" alt="" width="28" height="28" loading="lazy">`;
+
+  function records(uptoRound = state.rounds.length) {
+    const r = {};
+    for (const c of Object.keys(TEAMS)) r[c] = { w: 0, l: 0 };
+    state.rounds.slice(0, uptoRound).forEach((rd) => rd.matches.forEach((m) => {
+      if (!m.w) return;
+      const loser = m.w === m.a ? m.b : m.a;
+      r[m.w].w++; r[loser].l++;
+    }));
+    return r;
+  }
+  const recStr = (x) => `${x.w}-${x.l}`;
+  const latest = () => state.rounds.length - 1;
+  const roundDone = (i) => state.rounds[i] && state.rounds[i].matches.every((m) => m.w);
+  const canDraw = () => state.rounds.length < ROUNDS.length && roundDone(latest());
+  const finished = () => state.rounds.length === ROUNDS.length && roundDone(latest());
+
+  function playedPairs(uptoRound) {
+    const s = new Set();
+    state.rounds.slice(0, uptoRound).forEach((rd) => rd.matches.forEach((m) => {
+      s.add(m.a + '|' + m.b); s.add(m.b + '|' + m.a);
+    }));
+    return s;
+  }
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  // Random perfect matching with no rematches (backtracking); falls back to allowing rematches.
+  function pairPool(teams, played) {
+    const solve = (rest) => {
+      if (!rest.length) return [];
+      const [first, ...others] = rest;
+      for (const opp of shuffle(others)) {
+        if (played.has(first + '|' + opp)) continue;
+        const sub = solve(others.filter((t) => t !== opp));
+        if (sub) return [[first, opp], ...sub];
+      }
+      return null;
+    };
+    return solve(shuffle(teams)) || (function fallback() {
+      const t = shuffle(teams); const out = [];
+      for (let i = 0; i < t.length; i += 2) out.push([t[i], t[i + 1]]);
+      return out;
+    })();
+  }
+  function drawRound(i) {
+    const rec = records(i);
+    const played = playedPairs(i);
+    const matches = [];
+    for (const g of ROUNDS[i].groups) {
+      const pool = Object.keys(TEAMS).filter((c) => recStr(rec[c]) === g.rec);
+      for (const [a, b] of pairPool(pool, played)) matches.push({ a, b, w: null, rec: g.rec });
+    }
+    return { matches };
+  }
+  const signature = (rd) => rd.matches.map((m) => [m.a, m.b].sort().join('-')).sort().join(',');
+
+  // ---------- actions ----------
+  function pick(ri, mi, team) {
+    if (ri !== latest()) return;
+    commit(() => {
+      const m = state.rounds[ri].matches[mi];
+      m.w = m.w === team ? null : team;
+    });
+  }
+  function drawNext() {
+    if (!canDraw()) return;
+    const i = state.rounds.length;
+    commit(() => { state.rounds.push(drawRound(i)); });
+    dealRound = i; render(); dealRound = null;
+    scrollToRound(i);
+  }
+  function redraw() {
+    const i = latest();
+    if (i < 1) return;
+    const before = signature(state.rounds[i]);
+    let next = drawRound(i);
+    for (let k = 0; k < 40 && signature(next) === before; k++) next = drawRound(i);
+    commit(() => { state.rounds[i] = next; });
+    dealRound = i; render(); dealRound = null;
+    if (signature(next) === before) toast('這一輪只有這一種不重複的組合');
+  }
+  function randomRound() {
+    const rd = state.rounds[latest()];
+    if (rd.matches.every((m) => m.w)) return;
+    commit(() => rd.matches.forEach((m) => { if (!m.w) m.w = Math.random() < .5 ? m.a : m.b; }));
+  }
+  function autoFinish() {
+    if (finished()) return;
+    commit(() => {
+      for (;;) {
+        state.rounds[latest()].matches.forEach((m) => { if (!m.w) m.w = Math.random() < .5 ? m.a : m.b; });
+        if (state.rounds.length >= ROUNDS.length) break;
+        state.rounds.push(drawRound(state.rounds.length));
+      }
+    });
+  }
+  function undo() {
+    if (!history.length) return;
+    state = JSON.parse(history.pop());
+    save(); render();
+  }
+  let resetArmed = false;
+  function reset() {
+    const btn = document.getElementById('btn-reset');
+    if (!resetArmed) {
+      resetArmed = true; btn.textContent = '確定重置？';
+      setTimeout(() => { resetArmed = false; btn.textContent = '重置'; }, 2500);
+      return;
+    }
+    resetArmed = false; btn.textContent = '重置';
+    commit(() => { state = freshState(); });
+    toast('已重置，可以按「倒退」復原');
+  }
+  function copyResult() {
+    const rec = records();
+    const lines = ['Worlds 2026 瑞士輪預測'];
+    for (const k of ['3-0', '3-1', '3-2', '2-3', '1-3', '0-3']) {
+      const ts = Object.keys(TEAMS).filter((c) => recStr(rec[c]) === k).map(label);
+      lines.push(`${RESULTS[k].adv ? '晉級' : '淘汰'} ${k}：${ts.length ? ts.join(', ') : '—'}`);
+    }
+    const text = lines.join('\n');
+    const done = () => toast('已複製到剪貼簿');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+    } else fallbackCopy(text, done);
+  }
+  function fallbackCopy(text, done) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) { toast('複製失敗'); }
+    ta.remove();
+  }
+  let toastTimer;
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 1800);
+  }
+  function scrollToRound(i) {
+    const el = document.querySelector(`[data-round="${i}"]`);
+    if (el) el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest', inline: 'center' });
+  }
+
+  // ---------- rendering ----------
+  function teamBtn(m, side, ri, mi, locked) {
+    const c = m[side];
+    const cls = ['team', side === 'b' ? 'right' : ''];
+    if (m.w) cls.push(m.w === c ? 'win' : 'lose');
+    return `<button type="button" class="${cls.join(' ')}" data-r="${ri}" data-m="${mi}" data-t="${c}"
+      ${locked ? 'disabled' : ''} title="${TEAMS[c].name}（${TEAMS[c].seed}）${locked ? '' : '：選這隊贏'}"
+      aria-pressed="${m.w === c}">${logo(c)}<span class="code">${label(c)}</span></button>`;
+  }
+  function roundGroups(ri) {
+    const rd = state.rounds[ri];
+    const locked = ri !== latest();
+    let html = '';
+    for (const g of ROUNDS[ri].groups) {
+      html += `<div class="group"><div class="group-label"><span>${g.date} · ${g.bo}</span><span class="rec">(${g.rec})</span></div>`;
+      if (rd) {
+        rd.matches.forEach((m, mi) => {
+          if (m.rec !== g.rec) return;
+          html += `<div class="match${locked ? ' locked' : ''}">${teamBtn(m, 'a', ri, mi, locked)}<span class="vs">VS</span>${teamBtn(m, 'b', ri, mi, locked)}</div>`;
+        });
+      } else {
+        for (let k = 0; k < g.n; k++) html += `<div class="match placeholder"><span class="team empty"></span><span class="vs">VS</span><span class="team empty"></span></div>`;
+      }
+      html += '</div>';
+    }
+    return html;
+  }
+  function roundBlock(ri) {
+    const drawHere = ri === state.rounds.length && canDraw();
+    const draw = drawHere
+      ? `<div class="draw-slot"><button type="button" class="btn primary" data-action="draw">抽籤 ROUND ${ri + 1}</button></div>` : '';
+    const cls = dealRound === ri ? ' deal' : '';
+    return `<div class="col${cls}" data-round="${ri}" style="display:contents">${draw}${roundGroups(ri)}</div>`;
+  }
+  function resultBlock(key, rec) {
+    const r = RESULTS[key];
+    const teams = Object.keys(TEAMS).filter((c) => recStr(rec[c]) === key);
+    let chips = teams.map((c) => `<span class="chip" title="${TEAMS[c].name}">${logo(c)}${label(c)}</span>`).join('');
+    for (let k = teams.length; k < r.n; k++) chips += '<span class="chip empty"></span>';
+    return `<div class="result ${r.adv ? 'adv' : 'out'}"><div class="result-head"><span>${r.label}</span><span>${r.adv ? r.place : ''}</span></div><div class="result-body">${chips}</div></div>`;
+  }
+  function renderBracket() {
+    const rec = records();
+    document.getElementById('heads').innerHTML = COLUMNS.map((c, i) =>
+      `<div class="col-head"><span>${c.head}</span>${i < 5 && state.rounds[i] && roundDone(i) ? '<span style="color:var(--cyan)">✓</span>' : ''}</div>`).join('');
+    document.getElementById('bracket').innerHTML = COLUMNS.map((col) =>
+      `<div class="col">${col.items.map((it) => it.result ? resultBlock(it.result, rec) : roundBlock(it.round)).join('')}</div>`).join('');
+  }
+  function renderTable() {
+    const rec = records();
+    let html = '<thead><tr><th scope="col">Team</th>' + ROUNDS.map((_, i) => `<th scope="col">Round ${i + 1}</th>`).join('') + '<th scope="col">戰績</th></tr></thead><tbody>';
+    for (const c of TABLE_ORDER) {
+      html += `<tr><th scope="row"><span class="inner">${logo(c)}${label(c)}</span></th>`;
+      for (let i = 0; i < ROUNDS.length; i++) {
+        const m = state.rounds[i] && state.rounds[i].matches.find((x) => x.a === c || x.b === c);
+        if (!m) { html += '<td></td>'; continue; }
+        const opp = m.a === c ? m.b : m.a;
+        const cls = !m.w ? 'p' : m.w === c ? 'w' : 'l';
+        const word = !m.w ? '未定' : m.w === c ? '勝' : '敗';
+        html += `<td class="${cls}" title="${word} vs ${TEAMS[opp].name}">${logo(opp)}</td>`;
+      }
+      const r = rec[c];
+      const cls = r.w === 3 ? 'adv' : r.l === 3 ? 'out' : '';
+      html += `<td class="rec ${cls}">${recStr(r)}${r.w === 3 ? ' 晉級' : r.l === 3 ? ' 淘汰' : ''}</td></tr>`;
+    }
+    document.getElementById('prog').innerHTML = html + '</tbody>';
+  }
+  function renderStatus() {
+    const i = latest();
+    const left = state.rounds[i].matches.filter((m) => !m.w).length;
+    let msg;
+    if (finished()) {
+      const rec = records();
+      const adv = Object.keys(TEAMS).filter((c) => rec[c].w === 3).map(label);
+      msg = `<b>預測完成</b>　晉級：${adv.join('、')}`;
+    } else if (left) {
+      msg = `<b>Round ${i + 1}</b>　還有 ${left} 場要選勝方`;
+    } else {
+      msg = `<b>Round ${i + 1}</b> 已選完，按「抽籤 Round ${i + 2}」產生下一輪`;
+    }
+    document.getElementById('status').innerHTML = msg;
+    document.getElementById('btn-undo').disabled = !history.length;
+    document.getElementById('btn-redraw').disabled = i < 1;
+    document.getElementById('btn-random').disabled = !left;
+    document.getElementById('btn-auto').disabled = finished();
+  }
+  function render() { renderBracket(); renderTable(); renderStatus(); }
+
+  // ---------- events ----------
+  document.getElementById('bracket').addEventListener('click', (e) => {
+    const t = e.target.closest('button');
+    if (!t || t.disabled) return;
+    if (t.dataset.action === 'draw') return drawNext();
+    if (t.dataset.t) pick(+t.dataset.r, +t.dataset.m, t.dataset.t);
+  });
+  document.getElementById('btn-undo').addEventListener('click', undo);
+  document.getElementById('btn-redraw').addEventListener('click', redraw);
+  document.getElementById('btn-random').addEventListener('click', randomRound);
+  document.getElementById('btn-auto').addEventListener('click', autoFinish);
+  document.getElementById('btn-copy').addEventListener('click', copyResult);
+  document.getElementById('btn-reset').addEventListener('click', reset);
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
